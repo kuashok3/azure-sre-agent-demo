@@ -1,0 +1,19 @@
+[project]
+name = "azure-sre-agent-demo"
+version = "0.1.0"
+description = "Contoso Orders: a small order-processing service for learning Azure SRE Agent"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "integration: needs the local PostgreSQL from docker compose (skipped if unreachable)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

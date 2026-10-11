@@ -1,0 +1,13 @@
+# Runtime dependencies for orders-api and payment-stub (same container image).
+# Ranges are compatible-release constraints; exact versions validated in M1 are listed in CHECKPOINTS.md.
+fastapi>=0.115,<1.0
+uvicorn>=0.32,<1.0
+pydantic>=2.9,<3.0
+pydantic-settings>=2.6,<3.0
+psycopg[binary]>=3.2,<4.0
+psycopg-pool>=3.2,<4.0
+requests>=2.32,<3.0
+# Microsoft Entra token for PostgreSQL when DB_AUTH_MODE=entra (Azure only)
+azure-identity>=1.19,<2.0
+# Azure Monitor OpenTelemetry Distro: traces, logs, metrics -> Application Insights
+azure-monitor-opentelemetry>=1.6,<2.0

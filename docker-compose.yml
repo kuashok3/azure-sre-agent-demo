@@ -1,0 +1,73 @@
+﻿# Local stack: PostgreSQL + one-shot migrations + payment-stub + orders-api. No Azure needed.
+#   docker compose up -d --build      start everything
+#   docker compose logs -f orders-api follow JSON logs
+#   docker compose down               stop (data kept)   |  docker compose down -v  (wipe data)
+name: sre-demo
+
+# All three app services run the same image. Only orders-api builds it; the others reuse it
+# (pull_policy: never) so Compose does not build the same tag three times in parallel.
+x-app: &app
+  image: sre-demo-app:local
+  pull_policy: never
+  env_file: .env
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-orders}
+      POSTGRES_USER: ${DB_USER:-orders}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env (copy .env.example)}
+    ports:
+      - "${POSTGRES_HOST_PORT:-5434}:5432" # host port configurable to avoid clashes
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  migrate:
+    <<: *app
+    command: ["python", "-m", "app.orders.migrate"]
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  payment-stub:
+    <<: *app
+    command: ["python", "-m", "app.payment_stub"]
+    environment:
+      PORT: "8001"
+      OTEL_SERVICE_NAME: payment-stub
+    ports:
+      - "${PAYMENT_HOST_PORT:-8081}:8001"
+
+  orders-api:
+    <<: *app
+    pull_policy: build
+    build:
+      context: .
+      args:
+        APP_VERSION: ${APP_VERSION:-0.1.0-local}
+    environment:
+      PORT: "8000"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      PAYMENT_BASE_URL: http://payment-stub:8001
+      OTEL_SERVICE_NAME: orders-api
+    ports:
+      - "${ORDERS_HOST_PORT:-8080}:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      payment-stub:
+        condition: service_started
+
+volumes:
+  pgdata:

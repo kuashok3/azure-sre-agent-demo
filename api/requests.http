@@ -1,0 +1,60 @@
+# Example requests. Open in VS Code with the "REST Client" extension and click "Send Request".
+# Or use the interactive Swagger UI at http://localhost:8080/docs
+@base = http://localhost:8080
+@token = change-me-local-fault-token
+
+### Service description
+GET {{base}}/
+
+### Liveness (process up)
+GET {{base}}/health/live
+
+### Readiness (dependencies)
+GET {{base}}/health/ready
+
+### Version / deployment info
+GET {{base}}/info
+
+### Create an order
+# @name created
+POST {{base}}/api/v1/orders
+Content-Type: application/json
+X-Correlation-ID: demo-request-0001
+
+{
+  "customer_id": "cust-001",
+  "currency": "USD",
+  "items": [
+    { "sku": "WIDGET-1", "quantity": 2, "unit_price_cents": 1250 },
+    { "sku": "GADGET-2", "quantity": 1, "unit_price_cents": 4999 }
+  ]
+}
+
+### Get the order just created
+GET {{base}}/api/v1/orders/{{created.response.body.id}}
+
+### Check out (pay) the order
+POST {{base}}/api/v1/orders/{{created.response.body.id}}/checkout
+
+### List recent orders
+GET {{base}}/api/v1/orders?limit=10
+
+### Business stats
+GET {{base}}/api/v1/stats
+
+### --- Fault injection (demo only) ---------------------------------------------
+
+### List faults
+GET {{base}}/admin/faults
+X-Fault-Token: {{token}}
+
+### Enable latency
+PUT {{base}}/admin/faults/latency
+X-Fault-Token: {{token}}
+Content-Type: application/json
+
+{ "params": { "delay_ms": 1500 } }
+
+### Reset all faults (recovery)
+DELETE {{base}}/admin/faults
+X-Fault-Token: {{token}}
