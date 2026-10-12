@@ -10,6 +10,24 @@ failures.
 | [CHECKPOINTS.md](CHECKPOINTS.md) | Milestone status and open issues |
 | [SECURITY.md](SECURITY.md) | Secrets, fault-API safety, least privilege |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Branching, checks, conventions |
+| [docs/SYSTEM_OVERVIEW.md](docs/SYSTEM_OVERVIEW.md) | Start here: what the service does and what "healthy" means |
+| [docs/](docs/) | Architecture, API, dependencies, configuration, observability, SLOs, failure modes, incident response, costs, inventory |
+| [runbooks/](runbooks/) | Step-by-step incident procedures |
+| [agent-context/](agent-context/) | Instructions and boundaries for Azure SRE Agent |
+
+## Sharing with the team
+
+Create a clean zip from the last commit. It never includes `.env`, `.venv` or other git-ignored files:
+```powershell
+git archive --format=zip --prefix=azure-sre-agent-demo/ -o ..\azure-sre-agent-demo.zip HEAD
+```
+Don't zip the folder with Explorer: that would include your `.venv` (hundreds of MB) and your `.env`.
+Teammates unzip it and follow the quick start below from Step 1. Each person gets their own `.env` from `.env.example`.
+
+Each teammate needs: Python 3.12+ on PATH (`python --version`), Docker Desktop running, and free
+ports 8080, 8081 and 5434 (otherwise see Troubleshooting). Docker Desktop requires a paid
+subscription in larger companies; check your organisation's licence before installing.
+Later in the project we move to a shared GitHub repository, which replaces zips.
 
 ## What runs
 

@@ -4,9 +4,9 @@
 |---|---|---|---|
 | Phase 0 research | ✅ Done | 2026-10-12 | docs/00_PHASE0_BLUEPRINT.md |
 | M0 Prerequisites | ⏳ In progress | 2026-10-12 | Azure CLI installed + logged in; providers registered (DBforPostgreSQL was registering); signed in as Entra work account (org-domain UPN, no #EXT#) ✅. Pending: agent region list, $/AAU, budget |
-| M1 Local app | ✅ Done (verified on architect laptop) | 2026-10-12 | ruff clean; 53 unit + 3 integration tests pass; compose stack healthy; `smoke_test.py` 13/13; JSON logs with correlation_id propagated orders-api → payment-stub |
+| M1 Local app | ✅ Done (verified on architect laptop) | 2026-10-12 | ruff clean; 53 unit + 3 integration tests pass; compose stack healthy; `smoke_test.py` 13/13; JSON logs with correlation_id propagated orders-api → payment-stub. Commit 2739c83 |
 | M2 Local faults | ✅ Done (code verified) | 2026-10-12 | `validate_faults.py --include-docker` all scenarios pass incl. real Postgres/payment-stub outages + recovery; admin API 401 without token, 404 when disabled; load test 145 req/s, 100% success, p95 ≈ 200 ms |
-| M3 Docs & SLOs | ⬜ | | |
+| M3 Docs & SLOs | ✅ Written, awaiting team review | 2026-10-12 | 13 docs + 5 runbooks + 2 agent-context files; log events and error codes cross-checked against code; Azure-specific parts marked [PLANNED-AZURE]; KQL unvalidated until M6. Acceptance needs a second-person review |
 | M4 Azure infra | ⬜ | | |
 | M5 Azure app | ⬜ | | |
 | M6 Telemetry | ⬜ | | |
@@ -30,10 +30,12 @@ pytest 8.4.2 · httpx 0.28.1 · responses 0.26.3 · ruff 0.17.0 · PostgreSQL 16
 | 2 | ~~Confirm Entra work account~~ Resolved 2026-10-12 | Architect | M0 |
 | 3 | Knowledge-base UI location and limits differ between doc pages | SRE Agent engineer | M7 |
 | 4 | ~~Azure CLI not installed~~ Resolved 2026-10-12 | Architect | M0 |
-| 5 | ~~Folder inside Desktop git repo~~ Resolved: own repo (`git init -b main`), nothing committed yet | Architect | M1 |
+| 5 | ~~Folder inside Desktop git repo~~ Resolved: own repo (`git init -b main`) | Architect | M1 |
 | 6 | Host ports moved to 8080/8081/5434 because the local "observio" stack uses 8000-8002/5433 | All | — |
 | 7 | Fault state is in-memory **per replica**. In Azure run 1 replica during fault demos, or faults hit only some requests | Architect | M4 |
 | 8 | Readiness probe design for Container Apps: a DB outage makes `/health/ready` 503, so the replica is removed from traffic and app telemetry goes quiet. Decide which probe paths to use in M4 | Architect | M4 |
 | 9 | `DB_AUTH_MODE=entra` (managed-identity token for PostgreSQL) is written but can only be verified in Azure | App & Deploy | M5 |
 | 10 | Single uvicorn worker: p50 rises to ~130 ms at ~145 req/s locally. Useful for spike demos; revisit replica/CPU sizing in M4 | App & Deploy | M4 |
 | 11 | Starlette prints a deprecation warning about `httpx` in TestClient (tests unaffected) | — | revisit on upgrade |
+| 12 | Team receives code as a `git archive` zip (verified 2026-10-12: 72 KB, no .env/.venv, fresh setup + 53 tests pass). Move to GitHub in M11 | Architect | M11 |
+| 13 | Windows PowerShell 5 `Get-Content`/`Set-Content` mangles UTF-8 files. Edit files with an editor, or use `-Encoding utf8` on both read and write | All | — |
