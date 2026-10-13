@@ -79,6 +79,12 @@ $ACR = $OUT.registryName.value; $KV = $OUT.keyVaultName.value; $PG = $OUT.postgr
 **Validation:** `az resource list -g $RG --query "[].{name:name, type:type}" -o table` lists the
 workspace, App Insights, identity, registry, vault, PostgreSQL server and environment.
 
+> **Opened a new PowerShell window after Step 5?** Re-run Step 1, then reload the names:
+> ```powershell
+> $OUT = az deployment group show -g $RG -n phase1 --query properties.outputs -o json | ConvertFrom-Json
+> $ACR = $OUT.registryName.value; $KV = $OUT.keyVaultName.value; $PG = $OUT.postgresServerName.value; $PG_FQDN = $OUT.postgresFqdn.value
+> ```
+
 ### Step 6: Fault-admin token into Key Vault (generated locally, never displayed)
 ```powershell
 $bytes = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
