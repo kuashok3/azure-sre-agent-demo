@@ -98,6 +98,12 @@ locally, it won't work in the cloud. Local is where you learn the app cheaply.
 | 2.7 | `.\.venv\Scripts\python.exe -m pytest -m integration -q` | 3 tests against the **real** local database. Expect `3 passed` |
 | 2.8 | `python scripts\smoke_test.py` | Calls every endpoint once and checks status codes. Expect `ALL CHECKS PASSED` (13 checks) |
 
+**About `.env`:** step 2.3 creates it automatically from `.env.example`. Nobody needs to create or edit it unless
+a port is taken. It's git-ignored on purpose. Background: [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) §2.
+
+**Explore with Swagger (15 min):** follow [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) §3: happy path, expected errors
+(409/404/422/402), then switch faults from Swagger and recover with `DELETE /admin/faults`.
+
 **Explore (facilitator demo, 5 min):**
 - Browser http://localhost:8080/docs: create an order, then check it out (Swagger UI).
 - Browser http://localhost:8080/health/ready: the database is **critical**, payment is **non-critical**.
