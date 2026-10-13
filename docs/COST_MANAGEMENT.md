@@ -15,6 +15,13 @@
 | Log Analytics / App Insights | per GB ingested (first 5 GB/month free per billing account) + retention | Only what is ingested | ~$0–10 | Daily cap, 30-day retention, `/health/live` excluded from telemetry |
 | Key Vault, alert rules, action group | per operation / per rule | Rules yes (small) | ~$1–3 | Few rules |
 
+## Measured SRE Agent usage
+
+| Date | What | Active-flow AAU (cumulative) | Notes |
+|---|---|---|---|
+| 2026-10-13 | Agent created (Anthropic model), trial: always-on waived until 2026-11-12 14:57 UTC | 0 | Cap set to 500 AAU/month |
+| 2026-10-13 | ~4 test chats (L1-01, L1-02, L2-03, L2-05) | **41** (100% chats) | ≈ 8–10 AAU per question that runs KQL/resource lookups, 2–3× Microsoft's 3.8 AAU "quick question" example. Plan ≈ 6–8 full investigations per 500 AAU |
+
 ## Controls checklist
 - [ ] Subscription budget (for example USD 100/month) with alerts at 50/80/100% to the architect.
 - [ ] Tags on all resources: `Project=AzureSREAgentDemo`, `Environment=NonProduction`, `Owner=Team`, `AutoCleanup=ReviewRequired`.
