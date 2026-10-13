@@ -26,6 +26,28 @@ from app.orders.config import Settings  # noqa: E402
 from app.orders.db import ENTRA_POSTGRES_SCOPE  # noqa: E402
 
 
+def admin_settings(server_fqdn: str, admin_upn: str, database: str) -> Settings:
+    """Settings for connecting as the Entra admin.
+
+    Every value this script depends on is passed explicitly. Explicit values win over environment
+    variables, so leftovers in the shell (e.g. local FAULTS_ENABLED / FAULT_ADMIN_TOKEN) can't
+    interfere. Fault injection and telemetry are irrelevant here and switched off.
+    """
+    return Settings(
+        _env_file=None,
+        environment="azure",
+        db_host=server_fqdn,
+        db_port=5432,
+        db_name=database,
+        db_user=admin_upn,
+        db_auth_mode="entra",
+        db_sslmode="require",
+        faults_enabled=False,
+        fault_admin_token=None,
+        applicationinsights_connection_string="",
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Bootstrap Azure PostgreSQL for orders-api")
     parser.add_argument("--server-fqdn", required=True)
@@ -37,16 +59,7 @@ def main() -> int:
     args = parser.parse_args()
 
     # 1. Migrations, as the admin (DB_AUTH_MODE=entra uses your `az login` token).
-    settings = Settings(
-        _env_file=None,
-        environment="azure",
-        db_host=args.server_fqdn,
-        db_port=5432,
-        db_name=args.database,
-        db_user=args.admin_upn,
-        db_auth_mode="entra",
-        db_sslmode="require",
-    )
+    settings = admin_settings(args.server_fqdn, args.admin_upn, args.database)
     applied = migrate.run(settings, migrate.DEFAULT_DIR)
     print(f"[1/3] migrations applied this run: {applied or 'none (already up to date)'}")
 
