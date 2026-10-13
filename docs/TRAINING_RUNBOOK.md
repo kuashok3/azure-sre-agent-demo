@@ -41,8 +41,9 @@ variables set earlier. If a window is closed, re-run **Step 4.1** and **Step 5.0
 | # | Task | How | Why |
 |---|---|---|---|
 | 0.1 | Give everyone repo access | GitHub → `kuashok3/azure-sre-agent-demo` → Settings → Collaborators → add each person; **they must accept the email invite before the session** | The repo is private |
-| 0.2 | Check everyone's Azure rights | Ask each person to run the 1.5 check (below) tonight | Bicep creates role assignments: needs **Owner** (or Contributor + User Access Administrator) |
-| 0.3 | If someone lacks rights | Create their two groups and make them Owner of just those (commands below) | Least privilege: they can't touch other teams' resources |
+| 0.2 | Check everyone's Azure rights | All developers have admin on the subscription (confirmed 2026-10-13). In Step 1.8 the role must be **Owner** (or Contributor **+** User Access Administrator) | Bicep and the agent wizard create role assignments; **Contributor alone fails** with `AuthorizationFailed` |
+| 0.3 | Only if someone has Contributor alone | Create their two groups and make them Owner of just those (commands below) | Not needed when everyone is Owner |
+| 0.3b | Safety briefing | Subscription Owner can change or delete **other teams'** resources. Rule: every command uses `-g $RG` / `-g $AGENT_RG`; read the name twice before any `delete` | Shared subscription |
 | 0.4 | Agree aliases | 3–8 lowercase letters, unique (e.g. `ravi`, `meena`) | Every name derives from it |
 | 0.5 | Trial check | Ask whether anyone has created an Azure SRE Agent before (Shipra, Sneha, Gaury created agents in this subscription) | The 30-day always-on waiver is per account, max 3 agents. Someone without it pays always-on from day 1 |
 | 0.6 | Docker Desktop licence | Confirm with IT | Docker Desktop needs a paid licence in larger companies |
