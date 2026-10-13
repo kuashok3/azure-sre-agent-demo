@@ -156,6 +156,15 @@ curl.exe -s "$URL/info"          # version = <tag>
 az containerapp revision list -n ca-orders-api -g $RG --query "[].{name:name, active:properties.active, created:properties.createdTime}" -o table
 ```
 
+### Step 15: Alerts (M6)
+```powershell
+az deployment group what-if -g $RG -f infra/alerts.bicep -p alertEmail=$ME_UPN
+az deployment group create -g $RG -n alerts -f infra/alerts.bicep -p alertEmail=$ME_UPN -o table
+az monitor scheduled-query list -g $RG --query "[].{name:name, severity:severity, enabled:enabled}" -o table
+```
+**Expected:** what-if shows 5 to create (action group + 4 rules); 4 enabled rules listed. You also get an
+e-mail saying you were added to action group `ag-sredemo`.
+
 ---
 
 ## 3. Daily cost routine

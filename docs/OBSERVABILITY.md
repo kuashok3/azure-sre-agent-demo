@@ -134,11 +134,20 @@ More queries are in the runbooks and in [SERVICE_LEVELS.md](SERVICE_LEVELS.md). 
 | `/health/live` | Container liveness probe, docker HEALTHCHECK | Process alive. Failing = restart the replica |
 | `/health/ready` | Humans, smoke tests, SRE Agent. Probe use decided in M4 (open issue 8) | 503 = DB problem; `degraded` = payment problem |
 
-## 7. Alerts [PLANNED-AZURE, M6]
+## 7. Alerts (`infra/alerts.bicep`)
 
-| Alert | Signal | Initial threshold (illustrative) | Severity |
-|---|---|---|---|
-| High 5xx rate | AppRequests, orders-api `/api/*` | > 5% over 5 min with ≥ 20 requests | Sev2 |
-| High latency | AppRequests p95 | > 1000 ms over 10 min | Sev3 |
-| Dependency failures | AppDependencies failed | > 10 in 5 min | Sev2 |
-| Database down | PostgreSQL `is_db_alive` metric or readiness | not alive for 5 min | Sev1 |
+Log-search alert rules on `log-sredemo`, evaluated every 5 minutes, auto-resolving, e-mail via
+action group `ag-sredemo`. Thresholds are illustrative for low demo traffic. Each query was run against
+live data on 2026-10-13 and would have fired during the drills.
+
+| Rule | Signal | Threshold | Severity | Runbook |
+|---|---|---|---|---|
+| `alert-sredemo-5xx-rate` | AppRequests orders-api `/api/*` | error rate > 5% over 5 min, ≥ 5 requests | Sev2 | HTTP_5XX_ERRORS |
+| `alert-sredemo-latency-p95` | AppRequests successful `/api/*` | p95 > 1000 ms over 10 min, ≥ 5 requests | Sev3 | HIGH_LATENCY |
+| `alert-sredemo-dependency-failures` | AppDependencies orders-api failed | > 3 in 5 min | Sev2 | DATABASE_FAILURE / DEPENDENCY_TIMEOUT |
+| `alert-sredemo-database-unavailable` | AppTraces `error_code = database_unavailable` | ≥ 1 in 5 min | Sev1 | DATABASE_FAILURE |
+
+**Timing to expect:** ingestion delay (2–5 min) + evaluation every 5 min means an alert typically fires
+**5–10 minutes** after the problem starts, and resolves 5–10 minutes after it ends.
+Why no PostgreSQL `is_db_alive` metric alert: a *stopped* server emits no metrics, so a metric alert
+would stay silent in exactly the outage we want to catch. The app-side signal fires either way.

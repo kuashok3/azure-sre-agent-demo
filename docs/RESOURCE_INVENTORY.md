@@ -20,7 +20,8 @@ All resources carry tags: `Project=AzureSREAgentDemo`, `Environment=NonProductio
 | Container Apps environment | `cae-sredemo` | Microsoft.App/managedEnvironments | ✅ phase 1 |
 | orders-api | `ca-orders-api` | Microsoft.App/containerApps | ⬜ phase 2 (M5) |
 | payment-stub | `ca-payment-stub` | Microsoft.App/containerApps | ⬜ phase 2 (M5) |
-| Action group / alert rules | `ag-sredemo`, `alert-sredemo-*` | Microsoft.Insights/* | ⬜ M6 |
+| Action group | `ag-sredemo` (e-mail ashok.kumar@relanto.ai) | Microsoft.Insights/actionGroups | ⏳ M6 Step 15 |
+| Alert rules | `alert-sredemo-5xx-rate`, `-latency-p95`, `-dependency-failures`, `-database-unavailable` | Microsoft.Insights/scheduledQueryRules | ⏳ M6 Step 15 |
 | Agent resource group | `rg-sredemo-agent` | Resource group | ⬜ Day 5 (M7) |
 | Azure SRE Agent | `sre-sredemo` | Microsoft.App/agents | ⬜ Day 5 (M7) |
 
