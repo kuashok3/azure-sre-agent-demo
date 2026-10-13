@@ -13,7 +13,7 @@ Legend: 🔒 = secret (never commit, never log). Azure column = planned values (
 | `ENVIRONMENT` | `local` | `local` | `azure` | `local`/`test`/`azure`. `azure` rejects placeholder tokens |
 | `APP_VERSION` | `0.1.0-dev` | set by compose build arg | image tag | Shown in `/info`, telemetry `service.version` |
 | `GIT_SHA`, `BUILD_TIME` | `unknown` | — | set by CI | Shown in `/info` |
-| `DEPLOYMENT_REGION` | `local` | — | `eastus2` | Shown in `/info` |
+| `DEPLOYMENT_REGION` | `local` | — | `centralindia` | Shown in `/info` |
 | `LOG_LEVEL` | `INFO` | `INFO` | `INFO` | DEBUG/INFO/WARNING/ERROR (case-insensitive) |
 | `OTEL_SERVICE_NAME` | `orders-api` / `payment-stub` | set by compose | same | Becomes `AppRoleName` in Application Insights |
 | `APPLICATIONINSIGHTS_CONNECTION_STRING` 🔒* | empty | empty | from App Insights | Empty = telemetry export off |

@@ -10,8 +10,11 @@ See [../README.md](../README.md) Steps 1–8. Startup order: `postgres` (healthy
 ## 2. Azure (M4 infrastructure + M5 application)
 
 > **Status:** templates compile and pass `az bicep lint`; region availability was checked for
-> eastus2 and centralindia (2026-10-12). **Not yet executed against Azure.** This section becomes
-> [VERIFIED] after the first successful run.
+> eastus2 and centralindia (2026-10-12). **eastus2 refused Burstable PostgreSQL (B1ms and B2s,
+> `SkuNotAvailable`) for this subscription**; a probe server in **centralindia succeeded** (2026-10-13),
+> so the stack runs in centralindia. This section becomes [VERIFIED] after the first successful run.
+>
+> **Moving from a failed region?** Follow "Region move" in §5 first.
 >
 > Shell: **Windows PowerShell**, from the repo root. Run steps in order, in **one** window: later steps
 > reuse variables from Step 1. If you open a new window, re-run Step 1.
@@ -31,14 +34,14 @@ See [../README.md](../README.md) Steps 1–8. Startup order: `postgres` (healthy
 ```powershell
 cd C:\Users\Relanto\Desktop\Azure_SRE
 az account show --query "{subscription:name, user:user.name}" -o table   # confirm the right subscription
-$LOCATION = "eastus2"            # or "centralindia": the decision made at the M4 checkpoint
+$LOCATION = "centralindia"       # eastus2 refused cheap PostgreSQL for this subscription (2026-10-13)
 $RG       = "rg-sredemo-app"
 $ME_ID    = az ad signed-in-user show --query id -o tsv
 $ME_UPN   = az ad signed-in-user show --query userPrincipalName -o tsv
 $MY_IP    = (Invoke-RestMethod https://api.ipify.org)
 $TAG      = git rev-parse --short HEAD
-$PG_SKU   = "Standard_B2s"   # B1ms was refused (SkuNotAvailable) for this subscription in eastus2 on 2026-10-13
-"$LOCATION | $RG | $ME_UPN | $MY_IP | image tag $TAG"
+$PG_SKU   = "Standard_B1ms"  # probe-tested OK in centralindia on 2026-10-13
+"$LOCATION | $RG | $PG_SKU | $ME_UPN | $MY_IP | image tag $TAG"
 ```
 **Expected:** one line with all values filled in. **Why `$MY_IP`:** the PostgreSQL firewall allows
 only Azure services plus your current IP (needed to run migrations in Step 9). If your IP changes,
@@ -175,3 +178,24 @@ PostgreSQL restarts itself after 7 days stopped. Re-stop it if the project is pa
 | Readiness 503 `database_unavailable` | DB role/grants missing, or server stopped | Step 9; check the server state |
 | Checkout 503 `payment_service_unavailable` | payment-stub down or the URL wrong | `az containerapp revision list -n ca-payment-stub -g $RG -o table` |
 | No telemetry | Wrong connection string, or ingestion delay | Wait 5 min; `/info` shows `telemetry_enabled: true`? |
+
+## 5. Region move (start over cleanly in another region)
+
+Use this when a region refuses a resource and you want to rebuild elsewhere. Resource names come from
+the resource group name, so the **same names** are reused in the new region. Two resource types keep
+deleted names reserved (Key Vault soft-delete; Log Analytics 14-day recovery), so release them first.
+
+```powershell
+$OLD_LOCATION = "eastus2"
+# 1. Permanently delete the workspace (otherwise its name stays reserved for 14 days)
+az monitor log-analytics workspace delete -g rg-sredemo-app -n log-sredemo --force true --yes
+# 2. Delete the resource group and everything in it (~5 min; waits until done)
+az group delete --name rg-sredemo-app --yes
+# 3. Release the Key Vault name (it is soft-deleted, not gone)
+az keyvault list-deleted --query "[].{name:name, location:properties.location}" -o table
+az keyvault purge --name kv-sredemo-uuouh --location $OLD_LOCATION
+# 4. Confirm the clean slate
+az group exists --name rg-sredemo-app          # false
+```
+Then run **Step 1** (new `$LOCATION`), **Step 2**, **Step 4**, **Step 5**. The budget (Step 3) is
+subscription-wide and stays as it is.
