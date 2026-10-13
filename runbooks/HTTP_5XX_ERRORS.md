@@ -26,7 +26,7 @@ AppTraces
 ```kusto
 AppExceptions
 | where TimeGenerated > ago(30m) and AppRoleName == "orders-api"
-| summarize n = count(), first = min(TimeGenerated), last = max(TimeGenerated) by ExceptionType, OuterMessage
+| summarize n = count(), first_seen = min(TimeGenerated), last_seen = max(TimeGenerated) by ExceptionType, OuterMessage
 ```
 - `InjectedFaultError` → drill (`http_5xx`). Confirm with the `fault_enabled` audit event. Recover with `fault.py reset`.
 - Anything else → did errors start right after a new revision? Then roll back (approval required).

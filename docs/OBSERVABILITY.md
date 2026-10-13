@@ -58,6 +58,11 @@ route templates, `ResultCode`), `AppDependencies` (`DependencyType` = `postgresq
 `AppTraces` (`Properties.event` populated). Still to verify in M6: `AppExceptions`, `AppMetrics`,
 `ContainerApp*_CL`.
 
+Fix verified 2026-10-13: after release `7b897f1`, zero `/health/live` requests and zero `InProc` spans in
+45 minutes; the last noisy rows carried `AppVersion = 663995c` (old revision draining). Use `AppVersion`
+and `AppRoleInstance` to attribute telemetry to a release and a replica.
+KQL gotcha: `first` and `last` are reserved words. Name columns `first_seen` / `last_seen`.
+
 Known noise to filter out of queries: `AppDependencies` rows with `Target = settings.sdk.monitor.azure.com`
 (the Azure Monitor SDK fetching its own settings). Fixed in code (commit 2624049): liveness-probe
 requests and FastAPI's internal `fastapi.*` "InProc" spans are no longer exported.
