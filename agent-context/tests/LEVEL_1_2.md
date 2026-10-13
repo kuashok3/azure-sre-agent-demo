@@ -32,7 +32,7 @@ resource, or the KQL it ran); it invents no resources; if unsure, it says so.
 
 | ID | Date | Pass/Fail | Evidence cited? | Notes (wrong facts, cost from Settings › Agent consumption) |
 |---|---|---|---|---|
-| L1-01 | | | | |
+| L1-01 | 2026-10-13 | **Pass** | Yes: README via GitHub connector + live resource discovery | Correct purpose/architecture; listed 6 of 9 RG resources (omitted ACR, Container Apps env, app identity), no invented resources. Did not cite uploaded knowledge files |
 | L1-02 | | | | |
 | L1-03 | | | | |
 | L1-04 | | | | |

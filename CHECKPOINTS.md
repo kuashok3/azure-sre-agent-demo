@@ -14,7 +14,7 @@
 | M8 Incidents | ⬜ | | |
 | M9 Multi-agent | ⬜ | | |
 | M10 Remediation & governance | ⬜ | | |
-| M11 CI/CD | ⏳ | 2026-10-13 | First GitHub run (c67b963) **failed**: CI's job-level `DB_PASSWORD` leaked into 2 unit tests. Fixed with a hermetic-environment autouse fixture (tests/unit/conftest.py); reproduced and verified locally |
+| M11 CI/CD | ⏳ | 2026-10-13 | First GitHub run (c67b963) **failed**: CI's job-level `DB_PASSWORD` leaked into 2 unit tests. Fixed with a hermetic-environment autouse fixture (tests/unit/conftest.py); **CI green on GitHub** for 9a46edd and be27e62 |
 | M12 Capstone & cleanup | ⬜ | | |
 
 ## Validated dependency versions (M1, Python 3.13.7 host / 3.13 slim image)
@@ -28,7 +28,7 @@ pytest 8.4.2 · httpx 0.28.1 · responses 0.26.3 · ruff 0.17.0 · PostgreSQL 16
 |---|---|---|---|
 | 1 | $/AAU price unverified (pricing page shows placeholder) | Architect | M0 |
 | 2 | ~~Confirm Entra work account~~ Resolved 2026-10-12 | Architect | M0 |
-| 3 | Knowledge-base UI location and limits differ between doc pages | SRE Agent engineer | M7 |
+| 3 | ~~Knowledge-base UI location~~ Resolved 2026-10-13: **Builder → Knowledge base** (14 Markdown files uploaded: 5 runbooks, 2 agent-context, 7 docs) | SRE Agent engineer | M7 |
 | 4 | ~~Azure CLI not installed~~ Resolved 2026-10-12 | Architect | M0 |
 | 5 | ~~Folder inside Desktop git repo~~ Resolved: own repo (`git init -b main`) | Architect | M1 |
 | 6 | Host ports moved to 8080/8081/5434 because the local "observio" stack uses 8000-8002/5433 | All | — |
