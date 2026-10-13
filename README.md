@@ -10,6 +10,7 @@ failures.
 | [CHECKPOINTS.md](CHECKPOINTS.md) | Milestone status and open issues |
 | [SECURITY.md](SECURITY.md) | Secrets, fault-API safety, least privilege |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Branching, checks, conventions |
+| [docs/TRAINING_RUNBOOK.md](docs/TRAINING_RUNBOOK.md) | **Hands-on session: code → local → Azure → alerts → SRE Agent → incident, one environment per person** |
 | [docs/SYSTEM_OVERVIEW.md](docs/SYSTEM_OVERVIEW.md) | Start here: what the service does and what "healthy" means |
 | [docs/](docs/) | Architecture, API, dependencies, configuration, observability, SLOs, failure modes, incident response, costs, inventory |
 | [runbooks/](runbooks/) | Step-by-step incident procedures |
