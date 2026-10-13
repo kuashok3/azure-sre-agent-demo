@@ -49,7 +49,18 @@
 How to find everything about one failed request: take `correlation_id` from the error body,
 search `AppTraces` for it, read its `OperationId`, then query all tables by that `OperationId`.
 
-## 4. Telemetry table map [to verify in M6]
+## 4. Telemetry table map
+
+**Verified against live data on 2026-10-13** (first Azure deploy, `az monitor log-analytics query`):
+`AppRequests` (`AppRoleName` = `orders-api` / `payment-stub`, `Name` = `GET /api/v1/orders/{order_id}`
+route templates, `ResultCode`), `AppDependencies` (`DependencyType` = `postgresql` with
+`Target` = `psql-sredemo-uuouh.postgres.database.azure.com|orders`; `HTTP` with `Target` = `ca-payment-stub`),
+`AppTraces` (`Properties.event` populated). Still to verify in M6: `AppExceptions`, `AppMetrics`,
+`ContainerApp*_CL`.
+
+Known noise to filter out of queries: `AppDependencies` rows with `Target = settings.sdk.monitor.azure.com`
+(the Azure Monitor SDK fetching its own settings). Fixed in code (commit 2624049): liveness-probe
+requests and FastAPI's internal `fastapi.*` "InProc" spans are no longer exported.
 
 | Table | Key columns we use | Our data |
 |---|---|---|
