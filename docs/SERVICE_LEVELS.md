@@ -73,7 +73,7 @@ percentages.
 let slo = 0.995;
 AppRequests
 | where TimeGenerated > ago(28d) and AppRoleName == "orders-api" and Url has "/api/"
-| summarize valid = count(), bad = countif(toint(ResultCode) >= 500)
+| summarize valid = sum(ItemCount), bad = sumif(ItemCount, toint(ResultCode) >= 500)
 | extend sli = 1.0 - todouble(bad) / valid,
          budget_requests = (1 - slo) * valid,
          budget_consumed_pct = round(100.0 * bad / ((1 - slo) * valid), 1)
@@ -84,7 +84,7 @@ AppRequests
 | where TimeGenerated > ago(28d) and AppRoleName == "orders-api" and Url has "/api/" and toint(ResultCode) < 500
 | extend journey = iff(Url has "/checkout", "checkout", "reads_creates"),
          threshold = iff(Url has "/checkout", 1500.0, 500.0)
-| summarize total = count(), fast = countif(DurationMs < threshold) by journey
+| summarize total = sum(ItemCount), fast = sumif(ItemCount, DurationMs < threshold) by journey
 | extend compliance_pct = round(100.0 * fast / total, 2)
 ```
 ```kusto
@@ -92,7 +92,7 @@ AppRequests
 let slo = 0.995;
 AppRequests
 | where TimeGenerated > ago(1h) and AppRoleName == "orders-api" and Url has "/api/"
-| summarize err = todouble(countif(toint(ResultCode) >= 500)) / count()
+| summarize err = todouble(sumif(ItemCount, toint(ResultCode) >= 500)) / sum(ItemCount)
 | extend burn_rate = round(err / (1 - slo), 1)
 ```
 

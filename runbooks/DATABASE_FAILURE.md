@@ -10,7 +10,7 @@ curl.exe -s https://<orders-fqdn>/health/ready     # local: http://localhost:808
 ```kusto
 AppDependencies
 | where TimeGenerated > ago(30m) and AppRoleName == "orders-api" and DependencyType == "postgresql"
-| summarize calls = count(), failed = countif(Success == false), p95 = percentile(DurationMs, 95) by bin(TimeGenerated, 5m)
+| summarize calls = sum(ItemCount), failed = sumif(ItemCount, Success == false), p95 = percentile(DurationMs, 95) by bin(TimeGenerated, 5m)
 ```
 
 ## 2. Synthetic or real?

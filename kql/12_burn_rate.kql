@@ -1,0 +1,9 @@
+// Error-budget burn rate over the lookback window. 1 = burning exactly at the SLO pace;
+// > 14.4 over 1 h means ~2% of a 28-day budget gone in an hour (page-worthy).
+let lookback = 1h;
+let slo = 0.995;
+AppRequests
+| where TimeGenerated > ago(lookback) and AppRoleName == 'orders-api' and Url has '/api/'
+| summarize total = sum(ItemCount), bad = sumif(ItemCount, toint(ResultCode) >= 500)
+| extend error_rate = todouble(bad) / total
+| extend burn_rate = round(error_rate / (1 - slo), 1)

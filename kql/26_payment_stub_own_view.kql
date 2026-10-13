@@ -1,0 +1,8 @@
+// Runbook DEPENDENCY_TIMEOUT, view 2 of 2: payment-stub's OWN request telemetry.
+// Slow here too => cause is inside payment-stub. Fast here but failing in view 1 => network/config.
+let lookback = 1h;
+AppRequests
+| where TimeGenerated > ago(lookback) and AppRoleName == 'payment-stub' and Url has '/api/v1/payments'
+| summarize n = sum(ItemCount), p95_ms = percentile(DurationMs, 95), errors = sumif(ItemCount, toint(ResultCode) >= 500)
+    by bin(TimeGenerated, 5m)
+| order by TimeGenerated asc

@@ -1,0 +1,9 @@
+// Q: Were synthetic faults switched on or off? (audit trail of the fault-injection API)
+// A drill announces itself here; a real outage does not.
+let lookback = 24h;
+AppTraces
+| where TimeGenerated > ago(lookback)
+| where tostring(Properties.event) in ('fault_enabled', 'fault_disabled', 'faults_reset')
+| project TimeGenerated, AppRoleName, evt = tostring(Properties.event),
+          fault = tostring(Properties.fault_name), params = tostring(Properties.fault_params)
+| order by TimeGenerated asc

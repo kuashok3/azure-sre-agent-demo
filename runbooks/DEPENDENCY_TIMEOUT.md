@@ -11,13 +11,13 @@ The **cause** is usually in payment-stub. Prove it by looking at payment-stub's 
 // orders-api's view of the dependency
 AppDependencies
 | where TimeGenerated > ago(30m) and AppRoleName == "orders-api" and DependencyType has "HTTP" and Target has "payment"
-| summarize calls = count(), failed = countif(Success == false), p95 = percentile(DurationMs, 95) by ResultCode
+| summarize calls = sum(ItemCount), failed = sumif(ItemCount, Success == false), p95 = percentile(DurationMs, 95) by ResultCode
 ```
 ```kusto
 // payment-stub's own view
 AppRequests
 | where TimeGenerated > ago(30m) and AppRoleName == "payment-stub" and Url has "/api/v1/payments"
-| summarize n = count(), p95 = percentile(DurationMs, 95), errors = countif(toint(ResultCode) >= 500) by bin(TimeGenerated, 5m)
+| summarize n = sum(ItemCount), p95 = percentile(DurationMs, 95), errors = sumif(ItemCount, toint(ResultCode) >= 500) by bin(TimeGenerated, 5m)
 ```
 
 | orders-api sees | payment-stub sees | Conclusion |

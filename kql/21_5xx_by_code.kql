@@ -1,0 +1,8 @@
+// Runbook HTTP_5XX_ERRORS: which 5xx, on which endpoint? The code tells you the layer:
+// 500 = app code, 503 database/payment unavailable, 504 payment timeout.
+let lookback = 1h;
+AppRequests
+| where TimeGenerated > ago(lookback) and AppRoleName == 'orders-api' and Url has '/api/'
+      and toint(ResultCode) >= 500
+| summarize n = sum(ItemCount) by ResultCode, Name
+| order by n desc

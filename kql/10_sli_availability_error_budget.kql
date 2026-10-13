@@ -1,0 +1,10 @@
+// SLI-1 availability and error budget (illustrative SLO 99.5%). See docs/SERVICE_LEVELS.md.
+// good = /api/* with ResultCode < 500 (4xx are good); valid = all /api/* requests.
+let lookback = 28d;
+let slo = 0.995;
+AppRequests
+| where TimeGenerated > ago(lookback) and AppRoleName == 'orders-api' and Url has '/api/'
+| summarize valid = sum(ItemCount), bad = sumif(ItemCount, toint(ResultCode) >= 500)
+| extend sli_pct = round(100.0 * (1.0 - todouble(bad) / valid), 3),
+         budget_requests = round((1 - slo) * valid, 1),
+         budget_consumed_pct = round(100.0 * bad / ((1 - slo) * valid), 1)

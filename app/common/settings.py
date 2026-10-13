@@ -6,7 +6,7 @@ failing later on the first request.
 
 from typing import Literal
 
-from pydantic import SecretStr, field_validator, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 MIN_FAULT_TOKEN_LENGTH = 16
@@ -25,6 +25,9 @@ class BaseServiceSettings(BaseSettings):
 
     # Empty locally; set in Azure. When empty, telemetry export is disabled.
     applicationinsights_connection_string: SecretStr | None = None
+    # Share of traces kept (1.0 = all). Lower it only for high traffic; SLO queries must then
+    # count with sum(ItemCount). See docs/OBSERVABILITY.md "Sampling".
+    telemetry_sampling_ratio: float = Field(1.0, gt=0.0, le=1.0)
 
     # Demo-only failure injection. Off unless explicitly enabled.
     faults_enabled: bool = False

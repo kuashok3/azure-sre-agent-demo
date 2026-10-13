@@ -11,7 +11,7 @@ fires, or users report slowness. **Related:** FM-1, FM-4, FM-7 in [KNOWN_FAILURE
 ```kusto
 AppRequests
 | where TimeGenerated > ago(30m) and AppRoleName == "orders-api" and Url has "/api/"
-| summarize p95 = percentile(DurationMs, 95), n = count() by Name, bin(TimeGenerated, 5m)
+| summarize p95 = percentile(DurationMs, 95), n = sum(ItemCount) by Name, bin(TimeGenerated, 5m)
 | order by TimeGenerated asc
 ```
 Local equivalent: `python scripts\load.py --duration 15 --concurrency 5` and read p95.
@@ -21,7 +21,7 @@ Local equivalent: `python scripts\load.py --duration 15 --concurrency 5` and rea
 // Compare request duration with the dependency time inside the same operation
 let reqs = AppRequests
   | where TimeGenerated > ago(30m) and AppRoleName == "orders-api" and Url has "/api/"
-  | project OperationId, req_ms = DurationMs, Name;
+  | project OperationId, req_ms = DurationMs, Name, ItemCount;
 let deps = AppDependencies
   | where TimeGenerated > ago(30m) and AppRoleName == "orders-api"
   | summarize dep_ms = sum(DurationMs), db_ms = sumif(DurationMs, DependencyType == "postgresql") by OperationId;

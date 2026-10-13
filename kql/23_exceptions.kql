@@ -1,0 +1,8 @@
+// Runbook HTTP_5XX_ERRORS: exception types. InjectedFaultError = http_5xx drill;
+// anything else after a new revision => suspect the release.
+let lookback = 1h;
+AppExceptions
+| where TimeGenerated > ago(lookback)
+| summarize n = sum(ItemCount), first_seen = min(TimeGenerated), last_seen = max(TimeGenerated)
+    by AppRoleName, ExceptionType, OuterMessage
+| order by n desc

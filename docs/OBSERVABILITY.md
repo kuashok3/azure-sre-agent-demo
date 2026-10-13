@@ -76,13 +76,31 @@ requests and FastAPI's internal `fastapi.*` "InProc" spans are no longer exporte
 | `AppMetrics` | `Name, Sum, ItemCount, Properties` | Business metrics |
 | `ContainerAppConsoleLogs_CL` / `ContainerAppSystemLogs_CL` | platform | stdout and platform events (restarts, probe failures, revision changes). Exact names depend on the environment's log configuration |
 
+## 4b. Sampling (read this before trusting any count)
+
+**Found 2026-10-13:** with no sampler configured, the Azure Monitor distro defaults to a
+**rate-limited sampler (~5 traces/s)**. During a fault drill it kept only 9 of ~20 requests in
+`AppRequests` (rows with `ItemCount` up to 6), while every log line in `AppTraces` was kept, so SLO
+and error-rate queries disagreed with the logs.
+
+Fix: `TELEMETRY_SAMPLING_RATIO` (default **1.0** = keep everything) is now always passed explicitly
+(`app/common/telemetry.py`, set in `infra/main.bicep`). Rules for queries:
+- Count with **`sum(ItemCount)`** / **`sumif(ItemCount, cond)`**, never `count()` / `countif()`.
+  Each row represents `ItemCount` real requests. At ratio 1.0 it is 1, so the result is the same.
+- Percentiles on sampled data are estimates; fine for p95 trends, not for exact counts.
+- Lower the ratio only if traffic (and cost) grows. Watch the 0.5 GB/day workspace cap during load tests.
+
+All queries in `kql/` and in these docs follow these rules. Run them with `scripts/run_kql.ps1`.
+**Validated 2026-10-13:** all 15 `kql/` files and all 15 KQL blocks in docs/runbooks ran successfully
+against the live workspace.
+
 ## 5. Starter KQL [unvalidated until M6]
 
 ```kusto
 // Error rate and volume per 5 minutes for the orders API
 AppRequests
 | where TimeGenerated > ago(1h) and AppRoleName == "orders-api" and Url has "/api/"
-| summarize total = count(), failed = countif(toint(ResultCode) >= 500) by bin(TimeGenerated, 5m)
+| summarize total = sum(ItemCount), failed = sumif(ItemCount, toint(ResultCode) >= 500) by bin(TimeGenerated, 5m)
 | extend error_rate_pct = round(100.0 * failed / total, 2)
 | order by TimeGenerated asc
 ```
@@ -91,14 +109,14 @@ AppRequests
 AppRequests
 | where TimeGenerated > ago(1h) and AppRoleName == "orders-api" and Url has "/api/"
 | summarize p50 = percentile(DurationMs, 50), p95 = percentile(DurationMs, 95),
-            p99 = percentile(DurationMs, 99), n = count() by Name
+            p99 = percentile(DurationMs, 99), n = sum(ItemCount) by Name
 | order by p95 desc
 ```
 ```kusto
 // Is a dependency the cause? Failures and latency by dependency
 AppDependencies
 | where TimeGenerated > ago(1h) and AppRoleName == "orders-api"
-| summarize calls = count(), failed = countif(Success == false),
+| summarize calls = sum(ItemCount), failed = sumif(ItemCount, Success == false),
             p95_ms = percentile(DurationMs, 95) by DependencyType, Target
 ```
 ```kusto

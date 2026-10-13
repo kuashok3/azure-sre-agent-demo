@@ -64,6 +64,7 @@ def create_app(
         settings.otel_service_name,
         settings.app_version,
         settings.environment,
+        settings.telemetry_sampling_ratio,
     )
     faults = faults or FaultRegistry(PAYMENT_FAULTS)
 

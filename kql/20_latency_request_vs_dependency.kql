@@ -1,0 +1,17 @@
+// Runbook HIGH_LATENCY: where is the time spent? Compare request duration with the dependency
+// time inside the same operation. req >> dep => inside orders-api; db_ms high => PostgreSQL.
+let lookback = 1h;
+let reqs = AppRequests
+    | where TimeGenerated > ago(lookback) and AppRoleName == 'orders-api' and Url has '/api/'
+    | project OperationId, req_ms = DurationMs, Name, ItemCount;
+let deps = AppDependencies
+    | where TimeGenerated > ago(lookback) and AppRoleName == 'orders-api'
+          and Target != 'settings.sdk.monitor.azure.com'
+    | summarize dep_ms = sum(DurationMs),
+                db_ms = sumif(DurationMs, DependencyType == 'postgresql'),
+                payment_ms = sumif(DurationMs, Target has 'payment') by OperationId;
+reqs
+| join kind=leftouter deps on OperationId
+| summarize n = sum(ItemCount), p95_req = percentile(req_ms, 95), p95_dep = percentile(dep_ms, 95),
+            p95_db = percentile(db_ms, 95), p95_payment = percentile(payment_ms, 95) by Name
+| order by p95_req desc

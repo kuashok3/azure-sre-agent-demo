@@ -1,0 +1,8 @@
+// Q: Which endpoints are slow? (p50/p95/p99 per route template)
+// Expect: checkout slowest (it calls payment-stub); all p95 under SLO thresholds when healthy.
+let lookback = 1h;
+AppRequests
+| where TimeGenerated > ago(lookback) and AppRoleName == 'orders-api' and Url has '/api/'
+| summarize n = sum(ItemCount), p50 = percentile(DurationMs, 50), p95 = percentile(DurationMs, 95),
+            p99 = percentile(DurationMs, 99) by Name
+| order by p95 desc

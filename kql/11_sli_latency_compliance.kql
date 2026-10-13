@@ -1,0 +1,10 @@
+// SLI-2 / SLI-3 latency compliance: share of successful requests under the threshold.
+// reads_creates < 500 ms (SLO 95%), checkout < 1500 ms (SLO 95%).
+let lookback = 28d;
+AppRequests
+| where TimeGenerated > ago(lookback) and AppRoleName == 'orders-api' and Url has '/api/'
+      and toint(ResultCode) < 500
+| extend journey = iff(Url has '/checkout', 'checkout', 'reads_creates'),
+         threshold_ms = iff(Url has '/checkout', 1500.0, 500.0)
+| summarize total = sum(ItemCount), fast = sumif(ItemCount, DurationMs < threshold_ms) by journey
+| extend compliance_pct = round(100.0 * fast / total, 2)

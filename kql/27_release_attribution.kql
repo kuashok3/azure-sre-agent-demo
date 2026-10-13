@@ -1,0 +1,9 @@
+// Which release (AppVersion) and replica (AppRoleInstance) produced the traffic and errors?
+// Use it to answer "did this start with the new release?" and "is old data still draining?"
+let lookback = 24h;
+AppRequests
+| where TimeGenerated > ago(lookback)
+| summarize n = sum(ItemCount), errors = sumif(ItemCount, toint(ResultCode) >= 500),
+            first_seen = min(TimeGenerated), last_seen = max(TimeGenerated)
+    by AppRoleName, AppVersion, AppRoleInstance
+| order by last_seen desc

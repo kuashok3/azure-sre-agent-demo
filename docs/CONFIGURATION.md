@@ -17,6 +17,7 @@ Legend: 🔒 = secret (never commit, never log). Azure column = planned values (
 | `LOG_LEVEL` | `INFO` | `INFO` | `INFO` | DEBUG/INFO/WARNING/ERROR (case-insensitive) |
 | `OTEL_SERVICE_NAME` | `orders-api` / `payment-stub` | set by compose | same | Becomes `AppRoleName` in Application Insights |
 | `APPLICATIONINSIGHTS_CONNECTION_STRING` 🔒* | empty | empty | from App Insights | Empty = telemetry export off |
+| `TELEMETRY_SAMPLING_RATIO` | `1.0` | — | `1.0` | Share of traces exported (0 < x ≤ 1). Always passed explicitly; see OBSERVABILITY §4b |
 | `FAULTS_ENABLED` | `false` | `true` | `true` during training | Mounts `/admin/faults` |
 | `FAULT_ADMIN_TOKEN` 🔒 | — | `change-me-local-fault-token` | Key Vault secret | ≥ 16 chars; required if faults enabled; `change-me…` rejected in Azure |
 | `HOST` | `127.0.0.1` | — (image sets `0.0.0.0`) | `0.0.0.0` | Bind address |

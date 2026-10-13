@@ -7,12 +7,12 @@
 ```kusto
 AppRequests
 | where TimeGenerated > ago(30m) and AppRoleName == "orders-api" and Url has "/api/" and toint(ResultCode) >= 500
-| summarize n = count() by ResultCode, Name
+| summarize n = sum(ItemCount) by ResultCode, Name
 ```
 ```kusto
 AppTraces
 | where TimeGenerated > ago(30m) and AppRoleName == "orders-api" and SeverityLevel >= 3
-| summarize n = count(), sample = take_any(Message) by event = tostring(Properties.event), code = tostring(Properties.error_code)
+| summarize n = sum(ItemCount), sample = take_any(Message) by event = tostring(Properties.event), code = tostring(Properties.error_code)
 ```
 
 | Code / error | Layer | Go to |
@@ -26,7 +26,7 @@ AppTraces
 ```kusto
 AppExceptions
 | where TimeGenerated > ago(30m) and AppRoleName == "orders-api"
-| summarize n = count(), first_seen = min(TimeGenerated), last_seen = max(TimeGenerated) by ExceptionType, OuterMessage
+| summarize n = sum(ItemCount), first_seen = min(TimeGenerated), last_seen = max(TimeGenerated) by ExceptionType, OuterMessage
 ```
 - `InjectedFaultError` → drill (`http_5xx`). Confirm with the `fault_enabled` audit event. Recover with `fault.py reset`.
 - Anything else → did errors start right after a new revision? Then roll back (approval required).

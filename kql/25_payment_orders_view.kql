@@ -1,0 +1,7 @@
+// Runbook DEPENDENCY_TIMEOUT, view 1 of 2: what orders-api experiences when calling payment-stub.
+// Failures at ~2000 ms = our client timeout fired.
+let lookback = 1h;
+AppDependencies
+| where TimeGenerated > ago(lookback) and AppRoleName == 'orders-api' and Target has 'payment'
+| summarize calls = sum(ItemCount), failed = sumif(ItemCount, Success == false), p95_ms = percentile(DurationMs, 95),
+            max_ms = max(DurationMs) by ResultCode

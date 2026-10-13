@@ -1,0 +1,8 @@
+// Runbook HTTP_5XX_ERRORS: error-level log lines grouped by our structured event and error code.
+// SeverityLevel 3 = Error, 4 = Critical.
+let lookback = 1h;
+AppTraces
+| where TimeGenerated > ago(lookback) and SeverityLevel >= 3
+| summarize n = sum(ItemCount), sample = take_any(Message)
+    by AppRoleName, evt = tostring(Properties.event), code = tostring(Properties.error_code)
+| order by n desc

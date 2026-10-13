@@ -1,0 +1,8 @@
+// Q: Is a dependency the cause? Calls, failures and p95 per dependency.
+// Excludes the Azure Monitor SDK's own settings calls (noise, not our dependency).
+let lookback = 1h;
+AppDependencies
+| where TimeGenerated > ago(lookback) and Target != 'settings.sdk.monitor.azure.com'
+| summarize calls = sum(ItemCount), failed = sumif(ItemCount, Success == false),
+            p95_ms = percentile(DurationMs, 95) by AppRoleName, DependencyType, Target
+| order by failed desc, p95_ms desc

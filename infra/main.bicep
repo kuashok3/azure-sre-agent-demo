@@ -248,6 +248,7 @@ var commonEnv = [
   { name: 'GIT_SHA', value: gitSha }
   { name: 'LOG_LEVEL', value: 'INFO' }
   { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', secretRef: 'appinsights-connection-string' }
+  { name: 'TELEMETRY_SAMPLING_RATIO', value: '1.0' } // explicit: the distro default rate-limits
   { name: 'FAULTS_ENABLED', value: 'true' }
   { name: 'FAULT_ADMIN_TOKEN', secretRef: 'fault-admin-token' }
 ]

@@ -1,0 +1,8 @@
+// Q: Is orders-api failing right now, and since when? (error rate per 5 minutes, /api/* only)
+// Expect: failed = 0 when healthy; a jump during http_5xx / db / payment incidents.
+let lookback = 1h;
+AppRequests
+| where TimeGenerated > ago(lookback) and AppRoleName == 'orders-api' and Url has '/api/'
+| summarize total = sum(ItemCount), failed = sumif(ItemCount, toint(ResultCode) >= 500) by bin(TimeGenerated, 5m)
+| extend error_rate_pct = round(100.0 * failed / total, 2)
+| order by TimeGenerated asc

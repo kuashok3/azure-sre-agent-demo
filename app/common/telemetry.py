@@ -20,9 +20,18 @@ _configured = False
 
 
 def setup_telemetry(
-    connection_string: str | None, service_name: str, service_version: str, environment: str
+    connection_string: str | None,
+    service_name: str,
+    service_version: str,
+    environment: str,
+    sampling_ratio: float = 1.0,
 ) -> bool:
-    """Configure export once per process. Must run before the FastAPI app object is created."""
+    """Configure export once per process. Must run before the FastAPI app object is created.
+
+    sampling_ratio is always passed explicitly. If omitted, the distro silently uses a
+    rate-limited sampler (~5 traces/s) that dropped requests during our drills, making SLO
+    queries on AppRequests wrong. 1.0 = keep every request (right for low-traffic demos).
+    """
     global _configured
     if _configured:
         return True
@@ -41,6 +50,7 @@ def setup_telemetry(
 
     configure_azure_monitor(
         connection_string=connection_string,
+        sampling_ratio=sampling_ratio,
         resource=Resource.create(
             {
                 "service.name": service_name,  # becomes cloud_RoleName / AppRoleName
@@ -50,7 +60,10 @@ def setup_telemetry(
         ),
     )
     _configured = True
-    logger.info("Application Insights telemetry enabled", extra={"event": "telemetry_enabled"})
+    logger.info(
+        "Application Insights telemetry enabled",
+        extra={"event": "telemetry_enabled", "sampling_ratio": sampling_ratio},
+    )
     return True
 
 
