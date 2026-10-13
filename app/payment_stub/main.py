@@ -22,7 +22,7 @@ from app.common.http_middleware import install_request_middleware
 from app.common.info import build_info
 from app.common.logging_setup import setup_logging
 from app.common.settings import BaseServiceSettings
-from app.common.telemetry import setup_telemetry
+from app.common.telemetry import fastapi_telemetry_config, setup_telemetry
 
 logger = logging.getLogger("app.payment_stub")
 
@@ -67,7 +67,9 @@ def create_app(
     )
     faults = faults or FaultRegistry(PAYMENT_FAULTS)
 
-    app = FastAPI(title="Payment Stub", version=settings.app_version)
+    app = FastAPI(
+        title="Payment Stub", version=settings.app_version, telemetry=fastapi_telemetry_config()
+    )
     app.state.settings = settings
     app.state.faults = faults
     register_error_handlers(app)

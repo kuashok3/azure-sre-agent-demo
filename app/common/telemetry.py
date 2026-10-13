@@ -14,6 +14,8 @@ import os
 
 logger = logging.getLogger(__name__)
 
+PROBE_PATH = "/health/live"
+
 _configured = False
 
 
@@ -31,11 +33,12 @@ def setup_telemetry(
         )
         return False
 
+    # Liveness probes run every few seconds; don't pay to store them as requests. Must be set
+    # BEFORE importing the distro: the FastAPI instrumentation reads it once, at import time.
+    os.environ.setdefault("OTEL_PYTHON_FASTAPI_EXCLUDED_URLS", PROBE_PATH.lstrip("/"))
     from azure.monitor.opentelemetry import configure_azure_monitor
     from opentelemetry.sdk.resources import Resource
 
-    # Liveness probes run every few seconds; don't pay to store them as requests.
-    os.environ.setdefault("OTEL_PYTHON_FASTAPI_EXCLUDED_URLS", "health/live")
     configure_azure_monitor(
         connection_string=connection_string,
         resource=Resource.create(
@@ -53,3 +56,18 @@ def setup_telemetry(
 
 def is_telemetry_enabled() -> bool:
     return _configured
+
+
+def _is_probe(scope) -> bool:
+    return scope.get("path") == PROBE_PATH
+
+
+def fastapi_telemetry_config() -> dict:
+    """Settings for FastAPI's built-in OpenTelemetry support, passed as FastAPI(telemetry=...).
+
+    FastAPI (0.143+) traces requests itself whenever a real tracer provider exists (as in Azure).
+    * operation_spans=False: drop the internal fastapi.dependencies/endpoint/serialization spans,
+      which would otherwise appear in AppDependencies as fake "dependencies" (3 rows per request).
+    * exclude: skip liveness probes entirely.
+    """
+    return {"operation_spans": False, "exclude": _is_probe}

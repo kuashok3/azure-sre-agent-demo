@@ -13,7 +13,7 @@ from app.common.fault_admin import build_fault_admin_router
 from app.common.faults import FaultRegistry
 from app.common.http_middleware import install_request_middleware
 from app.common.logging_setup import setup_logging
-from app.common.telemetry import setup_telemetry
+from app.common.telemetry import fastapi_telemetry_config, setup_telemetry
 from app.orders.config import Settings
 from app.orders.faults import FORWARDED_FAULTS, ORDERS_FAULTS
 from app.orders.payment_client import PaymentClient
@@ -73,6 +73,7 @@ def create_app(
         version=settings.app_version,
         description="Order-processing demo service for learning Azure SRE Agent.",
         lifespan=lifespan,
+        telemetry=fastapi_telemetry_config(),
     )
     app.state.settings = settings
     app.state.faults = faults
