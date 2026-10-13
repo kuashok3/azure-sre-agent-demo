@@ -37,6 +37,7 @@ $ME_ID    = az ad signed-in-user show --query id -o tsv
 $ME_UPN   = az ad signed-in-user show --query userPrincipalName -o tsv
 $MY_IP    = (Invoke-RestMethod https://api.ipify.org)
 $TAG      = git rev-parse --short HEAD
+$PG_SKU   = "Standard_B2s"   # B1ms was refused (SkuNotAvailable) for this subscription in eastus2 on 2026-10-13
 "$LOCATION | $RG | $ME_UPN | $MY_IP | image tag $TAG"
 ```
 **Expected:** one line with all values filled in. **Why `$MY_IP`:** the PostgreSQL firewall allows
@@ -60,14 +61,14 @@ az consumption budget list --query "[].{name:name, amount:amount}" -o table --on
 
 ### Step 4: Preview (what-if): nothing is created yet
 ```powershell
-az deployment group what-if -g $RG -f infra/main.bicep -p location=$LOCATION deployerObjectId=$ME_ID deployerPrincipalName=$ME_UPN clientIpAddress=$MY_IP
+az deployment group what-if -g $RG -f infra/main.bicep -p location=$LOCATION deployerObjectId=$ME_ID deployerPrincipalName=$ME_UPN clientIpAddress=$MY_IP postgresSkuName=$PG_SKU
 ```
 **Expected:** a list of `+ Create` items (≈ 15 resources/role assignments), **no** `- Delete` and no
 changes outside `rg-sredemo-app`. Stop here if anything looks wrong.
 
 ### Step 5: Deploy phase 1 (infrastructure): about 10–15 minutes, PostgreSQL is the slowest
 ```powershell
-az deployment group create -g $RG -n phase1 -f infra/main.bicep -p location=$LOCATION deployerObjectId=$ME_ID deployerPrincipalName=$ME_UPN clientIpAddress=$MY_IP -o table
+az deployment group create -g $RG -n phase1 -f infra/main.bicep -p location=$LOCATION deployerObjectId=$ME_ID deployerPrincipalName=$ME_UPN clientIpAddress=$MY_IP postgresSkuName=$PG_SKU -o table
 $OUT = az deployment group show -g $RG -n phase1 --query properties.outputs -o json | ConvertFrom-Json
 $ACR = $OUT.registryName.value; $KV = $OUT.keyVaultName.value; $PG = $OUT.postgresServerName.value; $PG_FQDN = $OUT.postgresFqdn.value
 "$ACR | $KV | $PG | $PG_FQDN"
@@ -110,7 +111,7 @@ as admin, in Step 9.
 
 ### Step 10: Deploy phase 2 (apps)
 ```powershell
-az deployment group create -g $RG -n phase2 -f infra/main.bicep -p location=$LOCATION deployerObjectId=$ME_ID deployerPrincipalName=$ME_UPN clientIpAddress=$MY_IP deployApps=true imageTag=$TAG gitSha=$TAG -o table
+az deployment group create -g $RG -n phase2 -f infra/main.bicep -p location=$LOCATION deployerObjectId=$ME_ID deployerPrincipalName=$ME_UPN clientIpAddress=$MY_IP postgresSkuName=$PG_SKU deployApps=true imageTag=$TAG gitSha=$TAG -o table
 $FQDN = az deployment group show -g $RG -n phase2 --query properties.outputs.ordersAppFqdn.value -o tsv
 $URL = "https://$FQDN"; $URL
 ```
@@ -138,10 +139,10 @@ Azure portal → `appi-sredemo` → **Logs** → run `requests | take 10`. Data 
 ### Step 14: Rollback rehearsal
 ```powershell
 az acr build --registry $ACR --image "sre-demo-app:$TAG-v2" --build-arg APP_VERSION="$TAG-v2" --build-arg GIT_SHA=$TAG .
-az deployment group create -g $RG -n phase2-v2 -f infra/main.bicep -p location=$LOCATION deployerObjectId=$ME_ID deployerPrincipalName=$ME_UPN clientIpAddress=$MY_IP deployApps=true imageTag="$TAG-v2" gitSha=$TAG -o none
+az deployment group create -g $RG -n phase2-v2 -f infra/main.bicep -p location=$LOCATION deployerObjectId=$ME_ID deployerPrincipalName=$ME_UPN clientIpAddress=$MY_IP postgresSkuName=$PG_SKU deployApps=true imageTag="$TAG-v2" gitSha=$TAG -o none
 curl.exe -s "$URL/info"          # version = <tag>-v2
 # Roll back = redeploy the previous tag
-az deployment group create -g $RG -n phase2-rollback -f infra/main.bicep -p location=$LOCATION deployerObjectId=$ME_ID deployerPrincipalName=$ME_UPN clientIpAddress=$MY_IP deployApps=true imageTag=$TAG gitSha=$TAG -o none
+az deployment group create -g $RG -n phase2-rollback -f infra/main.bicep -p location=$LOCATION deployerObjectId=$ME_ID deployerPrincipalName=$ME_UPN clientIpAddress=$MY_IP postgresSkuName=$PG_SKU deployApps=true imageTag=$TAG gitSha=$TAG -o none
 curl.exe -s "$URL/info"          # version = <tag>
 az containerapp revision list -n ca-orders-api -g $RG --query "[].{name:name, active:properties.active, created:properties.createdTime}" -o table
 ```
@@ -163,6 +164,7 @@ PostgreSQL restarts itself after 7 days stopped. Re-stop it if the project is pa
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | `what-if`/`create` fails with `AuthorizationFailed` on role assignments | Account lacks Owner / User Access Administrator | Use the Owner account |
+| PostgreSQL `SkuNotAvailable` (seen 2026-10-13 for B1ms in eastus2) | Size not offered to this subscription in the region, even though `list-skus` shows it | Set `$PG_SKU = "Standard_B2s"` and re-run Step 5 (other resources are kept) |
 | PostgreSQL `LocationIsOfferRestricted` / quota error | Region capacity for the subscription | Re-run Step 1 with the other region (new RG name) |
 | `ServerIsBusy` / conflicting operation on PostgreSQL | Child resources changed concurrently | Re-run Step 5. It's idempotent |
 | Step 5 re-run fails while the server is stopped | Updates need a running server | `az postgres flexible-server start ...` first |

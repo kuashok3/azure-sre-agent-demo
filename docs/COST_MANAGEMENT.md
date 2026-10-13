@@ -9,7 +9,7 @@
 |---|---|---|---|---|
 | Azure SRE Agent: always-on | 4 AAU per agent-hour (≈ 2,920 AAU/month) | **Yes, until deleted** (stopping does not help) | 2,920 × $/AAU (**$/AAU unverified**) | Create on Day 5; 30-day trial waives it; **delete** when done |
 | Azure SRE Agent: active flow | Tokens → AAU (≈ 1–4 AAU per question, 12–35 per investigation) | No | depends on use | Monthly cap ≥ 500 AAU in Settings › Agent consumption |
-| PostgreSQL Flexible B1ms + 32 GB storage | per hour + storage | Compute yes unless **stopped**; storage always | ~$15–20 | `az postgres flexible-server stop` between sessions (auto-starts after 7 days) |
+| PostgreSQL Flexible **B2s** + 32 GB storage (B1ms was refused for this subscription in eastus2) | per hour + storage | Compute yes unless **stopped**; storage always | ~$25–35 if left running 24×7 | `az postgres flexible-server stop` between sessions (auto-starts after 7 days) |
 | Container Apps (Consumption) | vCPU-s, GiB-s, requests; monthly free grant | Yes if `minReplicas ≥ 1` | ~$5–25 | `minReplicas 0` outside sessions |
 | Container Registry Basic | per day | Yes | ~$5 | Delete with the RG |
 | Log Analytics / App Insights | per GB ingested (first 5 GB/month free per billing account) + retention | Only what is ingested | ~$0–10 | Daily cap, 30-day retention, `/health/live` excluded from telemetry |

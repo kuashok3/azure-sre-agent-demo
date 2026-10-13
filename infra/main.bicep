@@ -41,6 +41,10 @@ param imageTag string = ''
 @description('Git commit of the deployed image (shown in /info)')
 param gitSha string = 'unknown'
 
+@description('PostgreSQL compute size (Burstable tier). B1ms is cheapest; B2s if B1ms is not offered to the subscription')
+@allowed(['Standard_B1ms', 'Standard_B2s'])
+param postgresSkuName string = 'Standard_B1ms'
+
 // ---------------------------------------------------------------------------------------------
 // Names
 // ---------------------------------------------------------------------------------------------
@@ -167,7 +171,7 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' = {
   name: names.postgres
   location: location
   tags: tags
-  sku: { name: 'Standard_B1ms', tier: 'Burstable' }
+  sku: { name: postgresSkuName, tier: 'Burstable' }
   properties: {
     version: '16'
     storage: { storageSizeGB: 32, autoGrow: 'Disabled' }
