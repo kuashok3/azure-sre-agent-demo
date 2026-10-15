@@ -113,7 +113,8 @@ as admin, in Step 9.
 
 ### Step 9: Migrations + app database role (least privilege)
 ```powershell
-.\.venv\Scripts\python.exe scripts\azure_db_bootstrap.py --server-fqdn $PG_FQDN --admin-upn $ME_UPN
+$APP_MI_OID = az identity show -g $RG -n id-orders-api --query principalId -o tsv
+.\.venv\Scripts\python.exe scripts\azure_db_bootstrap.py --server-fqdn $PG_FQDN --admin-upn $ME_UPN --app-object-id $APP_MI_OID
 ```
 **Expected:** `[1/3] migrations applied ... ['001_create_orders.sql']`, `[2/3] created Entra role 'id-orders-api'`,
 `[3/3] granted data-only access ...`. Re-running is safe.

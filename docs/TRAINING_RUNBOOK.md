@@ -214,10 +214,14 @@ az acr build --registry $ACR --image "sre-demo-app:$TAG" --build-arg APP_VERSION
 
 ### 5.3 Database setup: migrations + app's least-privilege user
 ```powershell
-.\.venv\Scripts\python.exe scripts\azure_db_bootstrap.py --server-fqdn $PG_FQDN --admin-upn $ME_UPN
+$APP_MI_OID = az identity show -g $RG -n id-orders-api --query principalId -o tsv
+.\.venv\Scripts\python.exe scripts\azure_db_bootstrap.py --server-fqdn $PG_FQDN --admin-upn $ME_UPN --app-object-id $APP_MI_OID
 ```
-**What it does:** as the Entra admin, creates the tables, then creates a database user for the app's managed
-identity that may **read and write data only**: no TRUNCATE, no schema changes. ✅ Lines `[1/3]`, `[2/3]`, `[3/3]`.
+**What it does:** as the Entra admin, creates the tables, then creates a database user for **your** app's managed
+identity, identified by its **object ID**, that may **read and write data only**: no TRUNCATE, no schema changes.
+✅ Lines `[1/3]`, `[2/3]`, `[3/3]`.
+**Why the object ID:** every environment's identity is called `id-orders-api`. With five of them in the tenant, a
+name lookup is ambiguous ("name isn't unique in the tenant"). The object ID is unique.
 
 ### 5.4 Deploy phase 2: the two apps
 ```powershell
@@ -431,6 +435,7 @@ Verify nothing is left (after the deletes finish, ~5–10 min):
 | `error during connect ... dockerDesktopLinuxEngine` | Docker Desktop not running | Start it and wait for "Engine running" |
 | PostgreSQL `SkuNotAvailable` | Size not offered in that region for this subscription | Keep `centralindia`; don't switch region |
 | `azure_db_bootstrap.py` error about `FAULT_ADMIN_TOKEN` placeholder | Old script version + leftover `FAULT*` variables in the window | `git pull`; `Remove-Item Env:FAULTS_ENABLED, Env:FAULT_ADMIN_TOKEN` |
+| Step 5.3: `Cannot validate Microsoft Entra ID user "id-orders-api" because its name isn't unique in the tenant` | Several environments' identities share the name; the old script granted by name | `git pull`, then run 5.3 as written (with `--app-object-id`). Tables already exist, so `[1/3]` reports none |
 | Script runs from `scripts\` and fails | Wrong folder | `cd` back to the repo root |
 | `Forbidden` on Key Vault right after phase 1 | New role still propagating | Wait 2–5 min, retry |
 | Step 5.3 timeout / connection refused | Your public IP changed (VPN/Wi-Fi) | Re-run 4.1 (new `$MY_IP`), then 4.4 to update the firewall rule |

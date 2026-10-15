@@ -129,7 +129,7 @@ All scripts run from the **repo root**. The `.py` helpers in `scripts\` use only
 | `scripts\validate_faults.py` | Runs **every** fault scenario, checks the symptom **and** the recovery, prints PASS/FAIL | Prove failure behaviour; demos | `python scripts\validate_faults.py` · `--include-docker` adds real outages locally |
 | `scripts\load.py` | Generates traffic for N seconds; prints req/s, status codes, success ratio, p50/p95/p99 | Traffic spikes; make alerts fire | `python scripts\load.py --concurrency 20 --duration 30` |
 | `scripts\run_kql.ps1` | Runs the saved queries in `kql\` against your Log Analytics workspace | Investigate in Azure; check the agent's numbers | `powershell -ExecutionPolicy Bypass -File scripts\run_kql.ps1 -ResourceGroup $RG -Lookback 24h` |
-| `scripts\azure_db_bootstrap.py` | **Azure only, once:** creates tables (as you, the DB admin) and a data-only DB user for the app's identity | Module 5 | `.\.venv\Scripts\python.exe scripts\azure_db_bootstrap.py --server-fqdn $PG_FQDN --admin-upn $ME_UPN` |
+| `scripts\azure_db_bootstrap.py` | **Azure only, once:** creates tables (as you, the DB admin) and a data-only DB user bound to the app identity's **object ID** | Module 5 | `.\.venv\Scripts\python.exe scripts\azure_db_bootstrap.py --server-fqdn $PG_FQDN --admin-upn $ME_UPN --app-object-id $APP_MI_OID` (get the ID with `az identity show -g $RG -n id-orders-api --query principalId -o tsv`) |
 | `scripts\_common.py` | Shared helper for the scripts (HTTP calls, reading `.env`) | Not run directly | — |
 | `python -m app.orders.migrate` | Applies `migrations\*.sql` once each (the `migrate` container runs it locally) | Automatic | — |
 | `python -m app.common.healthcheck` | Docker's health probe: calls `/health/live` | Automatic | — |
