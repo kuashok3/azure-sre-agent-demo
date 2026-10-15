@@ -260,7 +260,7 @@ resets, then **removes the token from the window**. (Leftover token variables br
 |---|---|---|
 | 6.1 | `powershell -ExecutionPolicy Bypass -File scripts\run_kql.ps1 -ResourceGroup $RG -Lookback 24h` | Runs our 15 validated KQL queries against **your** workspace: errors, latency, dependencies, SLOs, fault audit trail |
 | 6.2 | Facilitator: open `kql\20_latency_request_vs_dependency.kql` | Teach: compare request time with dependency time to find **where** time is spent |
-| 6.3 | Portal → your `appi-sredemo` → **Logs** → paste any `kql\*.kql` file | Same queries in the UI |
+| 6.3 | Portal → your resource group → **`log-sredemo`** (Log Analytics workspace, **not** `appi-sredemo`) → **Logs** → **KQL mode** → paste a whole `kql\*.kql` file → **Run** (time range shows "Set in query"; edit the `let lookback` line to widen it) | Same queries in the UI. The App Insights Logs page uses old table names (`requests`, `dependencies`), so our `App*` queries fail there |
 | 6.4 | `az deployment group create -g $RG -n alerts -f infra/alerts.bicep -p alertEmail=$ME_UPN -o table` | Creates an e-mail action group and **4 alert rules**: 5xx rate, p95 latency, dependency failures, database unavailable |
 | 6.5 | `az monitor scheduled-query list -g $RG --query "[].{name:name, enabled:enabled}" -o table` | ✅ 4 rules, all enabled |
 
